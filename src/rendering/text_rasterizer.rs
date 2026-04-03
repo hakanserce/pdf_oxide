@@ -128,9 +128,28 @@ impl TextRasterizer {
                         info.base_font
                     );
                     Some((embedded.to_vec(), 0, true))
+                } else if info.subtype == "Type0"
+                    && info.cid_to_gid_map.is_some()
+                    && info.cid_font_type.as_deref() == Some("CIDFontType0")
+                {
+                    // CIDFontType0 (CFF) with CIDToGIDMap — use direct GID rendering
+                    log::debug!(
+                        "Using embedded CFF font '{}' with CIDToGIDMap (CIDFontType0)",
+                        info.base_font
+                    );
+                    Some((embedded.to_vec(), 0, true))
+                } else if ttf_parser::Face::parse(embedded, 0).is_ok() {
+                    // Embedded font is parseable by ttf_parser — use direct rendering
+                    // with identity GID mapping rather than falling to system fonts
+                    // which are likely missing. Better than blob rendering.
+                    log::debug!(
+                        "Using embedded font '{}' with identity GID mapping (fallback)",
+                        info.base_font
+                    );
+                    Some((embedded.to_vec(), 0, true))
                 } else {
                     log::debug!(
-                        "Embedded font '{}' lacks usable cmap, falling back to system font",
+                        "Embedded font '{}' not parseable, falling back to system font",
                         info.base_font
                     );
                     self.load_font_data(&info.base_font)
