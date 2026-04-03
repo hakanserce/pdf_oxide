@@ -34,6 +34,9 @@ pub enum ImageFormat {
     Png,
     /// Joint Photographic Experts Group
     Jpeg,
+    /// Raw premultiplied RGBA pixel data (tiny-skia native format).
+    /// Each pixel is 4 bytes: R, G, B, A. Row-major, top-left origin.
+    RawRgba,
 }
 
 /// Options for page rendering.
@@ -233,6 +236,7 @@ impl PageRenderer {
                 .encode_png()
                 .map_err(|e| Error::InvalidPdf(format!("PNG encoding failed: {}", e)))?,
             ImageFormat::Jpeg => self.encode_jpeg(&pixmap)?,
+            ImageFormat::RawRgba => pixmap.data().to_vec(),
         };
 
         Ok(RenderedImage {
