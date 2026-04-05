@@ -54,6 +54,8 @@ impl TextRasterizer {
     pub fn new() -> Self {
         let mut fontdb = fontdb::Database::new();
         fontdb.load_system_fonts();
+        // Android system fonts are at /system/fonts/ — not scanned by load_system_fonts()
+        fontdb.load_fonts_dir("/system/fonts");
         Self { fontdb }
     }
 
